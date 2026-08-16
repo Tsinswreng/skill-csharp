@@ -2,13 +2,15 @@
 #let H = auto-heading;
 \-\-\-
 
-name: tsinswreng-write-csharp-code
+name: tsinswreng-csharp
 
-description: 編寫C\#代碼時閱讀此skill
+description: C\#代碼規範
 
 \-\-\-
 
 #H[類型別名][
+	僅用于有csproj的項目,
+	不用于腳本項目如csx(dotnet script)
 	```cs
 	global using i32 = int;
 	global using str = string;
@@ -41,6 +43,7 @@ description: 編寫C\#代碼時閱讀此skill
 		除`getter/setter`和lambda外、在類型中定義與實現的普通方法 禁止使用`=>`寫法。
 		即使只有一行代碼也要寫成傳統的大括弧+return的函數體形式。
 	]
+	- #[if語句和循環 必須打大括號]
 	
 ]
 

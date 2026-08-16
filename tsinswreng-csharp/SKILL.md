@@ -1,12 +1,14 @@
 ---
 
-name: tsinswreng-write-csharp-code
+name: tsinswreng-csharp
 
-description: 編寫C#代碼時閱讀此skill
+description: C#代碼規範
 
 ---
 
 ## 類型別名
+
+僅用于有csproj的項目, 不用于腳本項目如csx(dotnet script)
 
 ```cs
 global using i32 = int;
@@ -38,6 +40,7 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 - 左大括號不換行
 - 除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
 - 除`getter/setter`和lambda外、在類型中定義與實現的普通方法 禁止使用`=>`寫法。 即使只有一行代碼也要寫成傳統的大括弧+return的函數體形式。
+- if語句和循環 必須打大括號
 
 ## AOT
 
@@ -71,7 +74,7 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 ## 註釋
 
-- 修改代碼時禁止刪除我已有的註釋
+- **修改代碼時禁止隨意刪除已有的註釋**
 - 新寫的代碼一定要多加註釋
 - 註釋要避免正確的廢話 不能只是把表面的流程和意思翻譯一遍
 
