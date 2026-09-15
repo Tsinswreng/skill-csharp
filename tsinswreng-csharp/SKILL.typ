@@ -104,7 +104,7 @@ description: C\#代碼規範
 		約定: 
 		- Xxx.Decl.cs 表示 這個文件是專放聲明的;
 		- Xxx.Impl.cs 表示 這個文件是專放實現的;
-		訪問Xxx中的API時 優先閱讀`*.Decl.cs`。
+		訪問Xxx中的API時 若有則優先閱讀`*.Decl.cs`！㕥節省token
 	]
 	#H[以下情況你需要關注具體實現][
 		- 你正在負責這塊代碼的維護工作、而不是作爲調用API的第三方。

@@ -97,7 +97,7 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 - Xxx.Decl.cs 表示 這個文件是專放聲明的;
 - Xxx.Impl.cs 表示 這個文件是專放實現的;
 
-訪問Xxx中的API時 優先閱讀`*.Decl.cs`。
+訪問Xxx中的API時 若有則優先閱讀`*.Decl.cs`！㕥節省token
 
 ### 以下情況你需要關注具體實現
 
