@@ -35,13 +35,6 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 }
 ```
 
-## 代碼風格
-
-- 左大括號不換行
-- 除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
-- 除`getter/setter`和lambda外、在類型中定義與實現的普通方法 禁止使用`=>`寫法。 即使只有一行代碼也要寫成傳統的大括弧+return的函數體形式。
-- if語句和循環 必須打大括號
-
 ## AOT
 
 除非特殊說明、 **!!!所有代碼必須兼容AOT!!!**
@@ -114,7 +107,13 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 - 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 - 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
 
-## 命名規範
+## 代碼風格
+
+- 左大括號不換行
+- 除`getter/setter`和lambda外、在類型中定義與實現的普通方法 禁止使用`=>`寫法。 即使只有一行代碼也要寫成傳統的大括弧+return的函數體形式。
+- if語句和循環 必須打大括號
+
+### 類型名命名規範
 
 前綴命名:
 
@@ -137,3 +136,18 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 - XxxExtn: 放擴展方法的類。 `extension(Xxx z){}`
 - IXxxExtn: `extension(IXxx z){}`
+
+### 變量名命名規範
+
+- 除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
+  ```cs
+  public class SvcUser{
+  	public Task<ResLogout> Logout(IFnCtx Ctx, Ct CT){
+  		var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
+  		return ...;
+  	}
+  	
+  }
+  ```
+- private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
+- `public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。 個人傾向 靈活性優先, 傾向多使用public修飾。 當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
