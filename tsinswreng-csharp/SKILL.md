@@ -22,7 +22,7 @@ global using CT = CancellationToken;
 
 ## 異步函數規範
 
-- 約定 最後一個參數聲明爲`CT Ct`的爲異步函數、不需要加`Async後綴`
+- 約定 最後一個參數聲明爲`CT Ct`的爲異步函數、不需要加`Async`後綴
 - 異步函數不返回值時、返回值聲明爲`Task<nil>`、不用無泛型的Task
 - 異步函數實現(有方法體的即函數實現)一定要加`async`
 
@@ -105,11 +105,35 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 ## 代碼架構規範
 
-- 一個函數不要超過50行、若超過則考慮拆分
-- 函數不應接收過多參數。如果參數過多就應考慮建立專門的DTO作參數或返回值。
-- 使用面向接口的面向對象編程。用interface來做抽象而不是父類。
-- 僅用類繼承作爲代碼複用的手段、不依賴類繼承機制作抽象
+- 一個函數儘量不要超過50行, 若超過則考慮拆分
+- 函數不應接收過多參數, 如果參數過多就應考慮建立專門的DTO作參數或返回值。
+- 使用面向接口的面向對象編程, 用interface來做抽象而不是父類。
+- 僅用類繼承作爲代碼複用的手段, 不依賴類繼承機制來作抽象
 - 遵守SOLID原則
 - 考慮可擴展性和可維護性
-- 注意代碼複用、避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
+- 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 - 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
+
+## 命名規範
+
+前綴命名:
+
+- IXxx: interface
+- PoXxx: 實體類, 對應數據庫中的表
+- SvcXxx: Xxx服務類
+- DaoXxx: 數據訪問層
+- CtrlrXxx: WebApi端點(Controller)
+- DtoXxx: 數據傳輸對像
+- ReqXxx: 請求/入參Dto
+- ResXxx: 響應/返回值Dto
+- KeysXxx: 鍵名枚舉(注意禁止到處硬編碼字符串鍵名, 須在統一的類中定義好再引用)
+- ViewXxx: 視圖
+- VmXxx: 視圖模型
+- ToolXxx: 工具
+
+前綴可組合 如 ISvcXxx: Xxx服務接口
+
+後綴命名:
+
+- XxxExtn: 放擴展方法的類。 `extension(Xxx z){}`
+- IXxxExtn: `extension(IXxx z){}`
