@@ -124,6 +124,7 @@ description: C\#代碼規範
 	#H[類型名命名規範][
 		前綴命名:
 		- IXxx: interface
+		- EXxx: enum
 		- PoXxx: 實體類, 對應數據庫中的表
 		- SvcXxx: Xxx服務類
 		- DaoXxx: 數據訪問層

@@ -118,6 +118,7 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 前綴命名:
 
 - IXxx: interface
+- EXxx: enum
 - PoXxx: 實體類, 對應數據庫中的表
 - SvcXxx: Xxx服務類
 - DaoXxx: 數據訪問層
