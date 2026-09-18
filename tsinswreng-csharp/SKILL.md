@@ -107,6 +107,52 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 - 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 - 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
 
+### 何時用成員方法 何時用擴展方法
+
+對于接口/類,等 基礎/底層API應作爲其原始成員,
+
+滿足以下條件的API, 應考慮置于擴展中:
+
+- 基于被擴展類型的API而得到, 只是寫法上的簡化, 並非能力上的擴展
+- 作爲簡便寫法/高層封裝
+- 沒有多態/重寫的需求
+
+正確示例:
+
+```cs
+public class Tokenizer{
+	public IEnumerable<Token> Tokenize(TextReader Reader){
+		...
+	}
+}
+
+public static class TokenizerExtn{
+	public static IEnumerable<Token> Tokenize(this Tokenizer z, string Input){
+		using TextReader reader = new StringReader(text);
+		return z.Tokenize(reader);
+	}
+}
+```
+
+錯誤示例:
+
+```cs
+public class Tokenizer{
+	public IEnumerable<Token> Tokenize(TextReader Reader){
+		...
+	}
+	
+	public IEnumerable<Token> Tokenize(string Input){
+		using TextReader reader = new StringReader(text);
+		return this.Tokenize(reader);
+	}
+}
+```
+
+解析: `TextReader`支持流式, 不要求把所有輸入數據都加載在內存裏。 `string`則要求整個字符串都在內存裏。 因此可以輕鬆地無顧慮地把`string`適配成`TextReader`但反之則不行, 會丟失流式能力, 可能撐爆內存。 因此`TextReader`適合作爲底層的API, 但對于string爲主的場景, 接收`TextReader`的API調用起來不方便。 因此 第二個 `string`版的API適合作爲擴展而非成員方法。
+
+上面的例子是拿class演示的。 對于interface也同理, 在 interface 中尤應如此。
+
 ## 代碼風格
 
 - 左大括號不換行
