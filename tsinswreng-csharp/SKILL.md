@@ -61,6 +61,12 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 流亦同理、 `Stream` 默認需要懶加載、不能把全部數據都一次性載入內存、不能用MemoryStream接收
 
+總結常用對象:
+
+- 流: `Stream`
+- 泛型集合: `IAsyncEnumerable<>`, `IEnumerable<>`
+- 文本讀寫: `TextReader`, `TextWriter`
+
 ## 異步優先
 
 設計API旹優先考慮異步版本 尤其是IO操作相關的。 善用`Task<T>`和`IAsyncEnumerable<T>`
@@ -98,14 +104,60 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 ## 代碼架構規範
 
+### 總則
+
 - 一個函數儘量不要超過50行, 若超過則考慮拆分
 - 函數不應接收過多參數, 如果參數過多就應考慮建立專門的DTO作參數或返回值。
 - 使用面向接口的面向對象編程, 用interface來做抽象而不是父類。
 - 僅用類繼承作爲代碼複用的手段, 不依賴類繼承機制來作抽象
 - 遵守SOLID原則
-- 考慮可擴展性和可維護性
+- **考慮可維護性 可擴展性 可測試性**
 - 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 - 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
+
+### 可維護性 可擴展性 可測試性
+
+#### 減少依賴面, 統一門面
+
+要把散亂的、各自的依賴整合成集中的依賴(門面), 然後按門面訪問。 常見做法: interface+依賴注入
+
+##### 禁止散亂的 魔法字符串/魔法數字 等
+
+常見出錯點:
+
+- 按鍵取值中硬編碼鍵名
+- UI代碼中硬編碼字體大小/顏色等
+
+##### 減少不必要的操作系統/平臺依賴
+
+一個項目通常會劃分出多個程序集。 要確保核心程序集是平臺無關的, 不應依賴特定操作平臺的API, 不應依賴文件系統, 不依賴數據庫
+
+###### 文件操作不依賴文件系統
+
+常見做法:用 `IFileSystem` 接口
+
+```cs
+using System.IO.Abstractions;
+//來自第三方庫。接口來自 TestableIO.System.IO.Abstractions ;
+//默認實現來自 TestableIO.System.IO.Abstractions.Wrappers
+//若用戶未安裝則先請示用戶
+AddSingleton<IFileSystem, FileSystem>();
+```
+
+###### 用「流」作爲文件的抽象而不使用路徑作爲文件的抽象
+
+錯誤示例:
+
+```cs
+Task<nil> ConvertPdfToPng(str InputPath, str OutputPath, CT Ct);
+await ConvertPdfToPng("myDoc.pdf", "myDoc.png");
+```
+
+正確示例:
+
+```cs
+Task<nil> ConvertPdfToPng(Stream InputPath, Stream OutputPath, CT Ct);
+```
 
 ### 何時用成員方法 何時用擴展方法
 
@@ -141,7 +193,7 @@ public class Tokenizer{
 	public IEnumerable<Token> Tokenize(TextReader Reader){
 		...
 	}
-	
+
 	public IEnumerable<Token> Tokenize(string Input){
 		using TextReader reader = new StringReader(text);
 		return this.Tokenize(reader);
@@ -152,6 +204,10 @@ public class Tokenizer{
 解析: `TextReader`支持流式, 不要求把所有輸入數據都加載在內存裏。 `string`則要求整個字符串都在內存裏。 因此可以輕鬆地無顧慮地把`string`適配成`TextReader`但反之則不行, 會丟失流式能力, 可能撐爆內存。 因此`TextReader`適合作爲底層的API, 但對于string爲主的場景, 接收`TextReader`的API調用起來不方便。 因此 第二個 `string`版的API適合作爲擴展而非成員方法。
 
 上面的例子是拿class演示的。 對于interface也同理, 在 interface 中尤應如此。
+
+### 函數上下文
+
+使用 `IFnCtx? Ctx`作實例方法API的第一個參數。 來自`Tsinswreng.CsCtx`
 
 ## 代碼風格
 
@@ -176,6 +232,7 @@ public class Tokenizer{
 - ViewXxx: 視圖
 - VmXxx: 視圖模型
 - ToolXxx: 工具
+- OptXxx: Options
 
 前綴可組合 如 ISvcXxx: Xxx服務接口
 
@@ -193,7 +250,7 @@ public class Tokenizer{
   		var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
   		return ...;
   	}
-  	
+  
   }
   ```
 - private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
