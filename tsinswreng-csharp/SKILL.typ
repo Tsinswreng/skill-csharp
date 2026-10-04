@@ -62,6 +62,11 @@ description: C\#代碼規範
 	#H[流][
 		流亦同理、 `Stream` 默認需要懶加載、不能把全部數據都一次性載入內存、不能用MemoryStream接收
 	]
+	
+	總結常用對象:
+	- 流: `Stream`
+	- 泛型集合: `IAsyncEnumerable<>`, `IEnumerable<>`
+	- 文本讀寫: `TextReader`, `TextWriter`
 ]
 
 #H[異步優先][
@@ -103,6 +108,7 @@ description: C\#代碼規範
 
 
 #H[代碼架構規範][
+	#H[總則][
 	- 一個函數儘量不要超過50行, 若超過則考慮拆分
 	- 函數不應接收過多參數, 如果參數過多就應考慮建立專門的DTO作參數或返回值。
 	- 使用面向接口的面向對象編程, 用interface來做抽象而不是父類。
@@ -111,18 +117,106 @@ description: C\#代碼規範
 	- 考慮可擴展性和可維護性
 	- 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 	- 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
-	
+	]
+
+
+	#H[減少依賴面][
+		要把散亂的、各自的依賴整合成集中的依賴
+		#H[禁止散亂的 魔法字符串/魔法數字 等][
+			場景需求: 用戶名和郵箱文本框顏色統一用`#00ffff`
+			
+			錯誤示例:
+			```cs
+			TextBlock MkUserNameTextBlock(){
+				return new TextBlock{
+					Foreground = ToColor("#00ffff"),
+					Size = 2.0
+				};
+			}
+			
+			TextBlock MkEmailTextBlock(){
+				return new TextBlock{
+					Foreground = ToColor("#00ffff"),
+					Size = 1.0
+				};
+			}
+			```
+			
+			正確示例:
+			````cs
+			UserNameColor="#00ffff";//僞代碼。實際上可能是普通變量, 類成員等
+			...
+			TextBlock MkUserNameTextBlock(){
+				return new TextBlock{
+					Foreground = ToColor(UserNameColor),
+					Size = 2.0
+				};
+			}
+			
+			TextBlock MkEmailTextBlock(){
+				return new TextBlock{
+					Foreground = ToColor(UserNameColor),
+					Size = 1.0
+				};
+			}
+			````
+			解析: 錯誤示例中裸字符串`#00ffff`被分別依賴了多次。
+			裸字符串/裸數字等 不能結合IDE查找引用,
+			若後續需要調整顏色只能逐處調整,
+			難以維護和緟構。
+			正確示例中 他們只依賴`UserNameColor`標識符,
+			故減少了依賴面。
+			
+			常見出錯點:
+			- 按鍵取值中硬編碼鍵名
+			- UI代碼中硬編碼字體大小/顏色等
+		]
+		
+		#H[減少不必要的操作系統/平臺依賴][
+			一個項目通常會劃分出多個程序集。
+			要確保核心程序集是平臺無關的,
+			不應依賴特定操作平臺的API,
+			不應依賴文件系統,
+			不依賴數據庫
+
+			#H[文件操作不依賴文件系統][
+				常見做法:用 `IFileSystem` 接口
+				```cs
+				using System.IO.Abstractions;
+				//來自第三方庫。接口來自 TestableIO.System.IO.Abstractions ;
+				//默認實現來自 TestableIO.System.IO.Abstractions.Wrappers
+				//若用戶未安裝則先請示用戶
+				AddSingleton<IFileSystem, FileSystem>();
+				```
+			]
+			
+			#H[用「流」作爲文件的抽象而不使用路徑作爲文件的抽象][
+				錯誤示例:
+				```cs
+				Task<nil> ConvertPdfToPng(str InputPath, str OutputPath, CT Ct);
+				await ConvertPdfToPng("myDoc.pdf", "myDoc.png");
+				```
+
+				正確示例:
+				````cs
+				Task<nil> ConvertPdfToPng(Stream InputPath, Stream OutputPath, CT Ct);
+				````
+			]
+
+		]
+	]
+
 	#H[何時用成員方法 何時用擴展方法][
 		對于接口/類,等
 		基礎/底層API應作爲其原始成員,
-		
+
 		滿足以下條件的API, 應考慮置于擴展中:
 		- #[基于被擴展類型的API而得到,
-			只是寫法上的簡化,
-			並非能力上的擴展]
+				只是寫法上的簡化,
+				並非能力上的擴展]
 		- 作爲簡便寫法/高層封裝
 		- 沒有多態/重寫的需求
-	
+
 		正確示例:
 		```cs
 		public class Tokenizer{
@@ -130,7 +224,7 @@ description: C\#代碼規範
 				...
 			}
 		}
-		
+
 		public static class TokenizerExtn{
 			public static IEnumerable<Token> Tokenize(this Tokenizer z, string Input){
 				using TextReader reader = new StringReader(text);
@@ -138,14 +232,14 @@ description: C\#代碼規範
 			}
 		}
 		```
-		
+
 		錯誤示例:
 		```cs
 		public class Tokenizer{
 			public IEnumerable<Token> Tokenize(TextReader Reader){
 				...
 			}
-			
+
 			public IEnumerable<Token> Tokenize(string Input){
 				using TextReader reader = new StringReader(text);
 				return this.Tokenize(reader);
@@ -162,12 +256,12 @@ description: C\#代碼規範
 		因此`TextReader`適合作爲底層的API,
 		但對于string爲主的場景, 接收`TextReader`的API調用起來不方便。
 		因此 第二個 `string`版的API適合作爲擴展而非成員方法。
-		
+
 		上面的例子是拿class演示的。
 		對于interface也同理,
 		在 interface 中尤應如此。
 	]
-	
+
 ]
 
 #H[代碼風格][
@@ -193,30 +287,31 @@ description: C\#代碼規範
 		- ViewXxx: 視圖
 		- VmXxx: 視圖模型
 		- ToolXxx: 工具
+		- OptXxx: Options
 		前綴可組合 如 ISvcXxx: Xxx服務接口
 
 		後綴命名:
 		- XxxExtn: 放擴展方法的類。 `extension(Xxx z){}`
 		- IXxxExtn: `extension(IXxx z){}`
 	]
-	
+
 	#H[變量名命名規範][
 		- #[除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
-		```cs
-		public class SvcUser{
-			public Task<ResLogout> Logout(IFnCtx Ctx, Ct CT){
-				var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
-				return ...;
-			}
-			
-		}
-		```
-		]
+				```cs
+				public class SvcUser{
+					public Task<ResLogout> Logout(IFnCtx Ctx, Ct CT){
+						var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
+						return ...;
+					}
+
+				}
+				```
+			]
 		- private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
 		- #[`public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。
-			個人傾向 靈活性優先, 傾向多使用public修飾。
-			當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
-		]
+				個人傾向 靈活性優先, 傾向多使用public修飾。
+				當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
+			]
 	]
 
 ]
