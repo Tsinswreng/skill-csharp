@@ -120,53 +120,12 @@ description: C\#代碼規範
 	]
 
 
-	#H[減少依賴面][
-		要把散亂的、各自的依賴整合成集中的依賴
+	#H[減少依賴面, 統一門面][
+		要把散亂的、各自的依賴整合成集中的依賴(門面),
+		然後按門面訪問。
+		常見做法:
+		interface+依賴注入
 		#H[禁止散亂的 魔法字符串/魔法數字 等][
-			場景需求: 用戶名和郵箱文本框顏色統一用`#00ffff`
-			
-			錯誤示例:
-			```cs
-			TextBlock MkUserNameTextBlock(){
-				return new TextBlock{
-					Foreground = ToColor("#00ffff"),
-					Size = 2.0
-				};
-			}
-			
-			TextBlock MkEmailTextBlock(){
-				return new TextBlock{
-					Foreground = ToColor("#00ffff"),
-					Size = 1.0
-				};
-			}
-			```
-			
-			正確示例:
-			````cs
-			UserNameColor="#00ffff";//僞代碼。實際上可能是普通變量, 類成員等
-			...
-			TextBlock MkUserNameTextBlock(){
-				return new TextBlock{
-					Foreground = ToColor(UserNameColor),
-					Size = 2.0
-				};
-			}
-			
-			TextBlock MkEmailTextBlock(){
-				return new TextBlock{
-					Foreground = ToColor(UserNameColor),
-					Size = 1.0
-				};
-			}
-			````
-			解析: 錯誤示例中裸字符串`#00ffff`被分別依賴了多次。
-			裸字符串/裸數字等 不能結合IDE查找引用,
-			若後續需要調整顏色只能逐處調整,
-			難以維護和緟構。
-			正確示例中 他們只依賴`UserNameColor`標識符,
-			故減少了依賴面。
-			
 			常見出錯點:
 			- 按鍵取值中硬編碼鍵名
 			- UI代碼中硬編碼字體大小/顏色等
