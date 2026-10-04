@@ -110,7 +110,8 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 - 函數不應接收過多參數, 如果參數過多就應考慮建立專門的DTO作參數或返回值。
 - 使用面向接口的面向對象編程, 用interface來做抽象而不是父類。
 - 僅用類繼承作爲代碼複用的手段, 不依賴類繼承機制來作抽象
-- 遵守SOLID原則
+- 遵守SOLID原則, 遵守常見設計模式
+  - 該用策略模式就用, 別if-else滿天飛
 - **考慮可維護性 可擴展性 可測試性**
 - 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 - 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
@@ -119,7 +120,54 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 #### 減少依賴面, 統一門面
 
-要把散亂的、各自的依賴整合成集中的依賴(門面), 然後按門面訪問。 常見做法: interface+依賴注入
+要把散亂的、各自的依賴整合成集中的依賴(門面), 然後按門面訪問。 把**同一類依賴**收斂到一個統一、穩定、語義化的入口（門面/抽象）, 調用方只依賴這個入口。 將來換實現時, 只改入口後面, 呼叫方不變。
+
+##### 先看示例
+
+錯誤示例
+
+```cs
+class Svc{
+	void Login(){
+		...
+		Console.WriteLine("Logged in");
+	}
+	void Logout(){
+		...
+		Console.WriteLine("Logged out");
+	}
+	void RefreshToken(){
+		...
+		Console.WriteLine("Token Refreshed");
+	}
+}
+```
+
+解析: 他們都各自依賴了`Console.WriteLine`作爲日誌輸出。 若將來需要更換輸出目標則需要逐個修改代碼, 可維護性差。
+
+最小改動的、非最佳做法的正確示例:
+
+```cs
+class Svc{
+	void Log(str Msg){
+		Console.WriteLine(Msg);
+	}
+	void Login(){
+		...
+		Log("Logged in");
+	}
+	void Logout(){
+		...
+		Log("Logged out");
+	}
+	void RefreshToken(){
+		...
+		Log("Token Refreshed");
+	}
+}
+```
+
+在此例中, 他們只依賴共同的門面`Log`, 減少了依賴面 將來切換實現時, 只需更改Log中的代碼。
 
 ##### 禁止散亂的 魔法字符串/魔法數字 等
 
@@ -127,12 +175,39 @@ async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
 
 - 按鍵取值中硬編碼鍵名
 - UI代碼中硬編碼字體大小/顏色等
+- 硬編碼UI顯示的未i18n的字符串, 硬編碼業務異常信息
 
-##### 減少不必要的操作系統/平臺依賴
+對于快速開發中的臨時硬編碼的UI文本或業務異常信息, 應放在`Todo.I18n()`中。 `Todo.I18n()`由業務項目自行定義, 如未提供, 則應停下來請示用戶。
+
+錯誤示例:
+
+```cs
+Button.Content = "登錄";
+throw new Exception("登錄失敗");
+```
+
+正確示例:
+
+```cs
+Button.Content = Todo.I18n("登錄");
+throw new Exception(Todo.I18n("登錄失敗"));
+```
+
+##### 禁止散亂的 對具體實現的依賴
+
+見上文Log之例
+
+常見的正確做法:
+
+- 把魔法值收斂到變量裏
+- 抽取統一的門面函數(代碼量少, 適合早期快速推進)
+- interface+依賴注入(最佳)
+
+#### 減少不必要的操作系統/平臺依賴
 
 一個項目通常會劃分出多個程序集。 要確保核心程序集是平臺無關的, 不應依賴特定操作平臺的API, 不應依賴文件系統, 不依賴數據庫
 
-###### 文件操作不依賴文件系統
+##### 文件操作不依賴文件系統
 
 常見做法:用 `IFileSystem` 接口
 
@@ -144,7 +219,7 @@ using System.IO.Abstractions;
 AddSingleton<IFileSystem, FileSystem>();
 ```
 
-###### 用「流」作爲文件的抽象而不使用路徑作爲文件的抽象
+##### 用「流」作爲文件的抽象而不使用路徑作爲文件的抽象
 
 錯誤示例:
 
@@ -156,12 +231,28 @@ await ConvertPdfToPng("myDoc.pdf", "myDoc.png");
 正確示例:
 
 ```cs
-Task<nil> ConvertPdfToPng(Stream InputPath, Stream OutputPath, CT Ct);
+Task<nil> ConvertPdfToPng(Stream Input, Stream Output, CT Ct);
 ```
 
-### 何時用成員方法 何時用擴展方法
+#### 日誌門面
 
-對于接口/類,等 基礎/底層API應作爲其原始成員,
+應在每個項目中定義一個`AppLog`作爲日誌門面
+
+```cs
+public class AppLog:DelegatingLogger {
+	public static AppLog Inst => field??=new AppLog();
+}
+```
+
+其中`DelegatingLogger`是`ILogger`子類型, 來自`Tsinswreng.CsLog` 在程序入口處爲`AppLog.Inst`初始化。 然後`AddSingleton<ILogger>(AppLog.Inst)`, 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`
+
+#### 函數上下文
+
+建議使用 `IFnCtx? Ctx`作實例方法API的第一個參數, 增強可擴展性。 來自`Tsinswreng.CsCtx`。 靜態方法則不需。
+
+### 基礎API與擴展方法
+
+對于接口/類,等 基礎/底層API應作爲其原始成員。 且設計API時亦應優先考慮基礎API。
 
 滿足以下條件的API, 應考慮置于擴展中:
 
@@ -205,9 +296,7 @@ public class Tokenizer{
 
 上面的例子是拿class演示的。 對于interface也同理, 在 interface 中尤應如此。
 
-### 函數上下文
-
-使用 `IFnCtx? Ctx`作實例方法API的第一個參數。 來自`Tsinswreng.CsCtx`
+再說一遍, 設計API時亦應優先考慮基礎API。
 
 ## 代碼風格
 
@@ -255,3 +344,8 @@ public class Tokenizer{
   ```
 - private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
 - `public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。 個人傾向 靈活性優先, 傾向多使用public修飾。 當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
+
+## 其他事項
+
+- 多打日誌
+- 少用元組。該自定義類型的就自定義
