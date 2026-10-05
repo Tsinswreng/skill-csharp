@@ -116,6 +116,7 @@ description: C\#代碼規範
 		- 遵守SOLID原則, 遵守常見設計模式
 			- 該用策略模式就用, 別if-else滿天飛
 		- *考慮可維護性 可擴展性 可測試性*
+		- 要考慮常見的可能的未來擴展點。當前寫法不能把未來擴展的路堵死
 		- 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
 		- 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
 	]
@@ -384,4 +385,30 @@ description: C\#代碼規範
 #H[其他事項][
 	- 多打日誌
 	- 少用元組。該自定義類型的就自定義
+]
+
+
+#H[漸近緟構法][
+	緟構[被依賴得多]的符號時,
+	優先做新版本而不是改老版本,
+	然後再逐步遷移過去。
+	
+	假設有一個有問題的函數需要緟構,
+	有20處引用了這個函數。
+	```cs
+	public (str FullPath, i64 CreatedTime, i64 ModifiedTime) GetFileInfo(str Path);
+	```
+	
+	錯誤示例:
+	````cs
+	public FileInfo GetFileInfo(str Path);
+	````
+	
+	正確示例:
+	
+	```cs
+	public (str FullPath, i64 CreatedTime, i64 ModifiedTime) GetFileInfo(str Path);
+	public FileInfo GetFileInfoV2(str Path);
+	```
+	
 ]
