@@ -327,6 +327,7 @@ public class Tokenizer{
 - VmXxx: 視圖模型
 - ToolXxx: 工具
 - OptXxx: Options
+- MkrXxx: Xxx Maker (工廠 等)
 
 前綴可組合 如 ISvcXxx: Xxx服務接口
 
