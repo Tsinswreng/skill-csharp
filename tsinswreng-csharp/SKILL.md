@@ -11,7 +11,7 @@ description: C#代碼規範
 僅用于有csproj的項目, 不用于腳本項目如csx(dotnet script)
 
 ```cs
-global using i32 = int;
+global using i32 = int;//i: 整數; u: 無符號整數; f: 浮點數; 其他依此類推
 global using str = string;
 global using obj = object;
 global using nil = object; // 專門用來表示null
@@ -235,18 +235,6 @@ await ConvertPdfToPng("myDoc.pdf", "myDoc.png");
 Task<nil> ConvertPdfToPng(Stream Input, Stream Output, CT Ct);
 ```
 
-#### 日誌門面
-
-應在每個項目中定義一個`AppLog`作爲日誌門面
-
-```cs
-public class AppLog:DelegatingLogger {
-	public static AppLog Inst => field??=new AppLog();
-}
-```
-
-其中`DelegatingLogger`是`ILogger`子類型, 來自`Tsinswreng.CsLog` 在程序入口處爲`AppLog.Inst`初始化。 然後`AddSingleton<ILogger>(AppLog.Inst)`, 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`
-
 #### 函數上下文
 
 建議使用 `IFnCtx? Ctx`作實例方法API的第一個參數, 增強可擴展性。 來自`Tsinswreng.CsCtx`。 靜態方法則不需。
@@ -363,7 +351,7 @@ public class Tokenizer{
 
 ## 其他事項
 
-- 多打日誌
+- 多打日誌 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`。 `AppLog.Inst`是ILogger的子類, 由項目基礎設施提供, 若缺則應請示用戶
 - 少用元組。該自定義類型的就自定義
 
 ## 漸近緟構法
