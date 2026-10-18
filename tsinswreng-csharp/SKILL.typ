@@ -395,6 +395,15 @@ description: C\#代碼規範
 
 ]
 
+
+#H[Json序列化][
+	方便依賴注入時就注入`IJsonSerializer`,
+	來自`Tsinswreng.CsJson`庫。
+	不方便依賴注入 想直接用時 就用`AppJson.Inst`。
+	這兩樣都由項目基礎設施提供,
+	若缺則應請示用戶。
+]
+
 #H[鍵枚舉][
 	如配置文件的鍵等。
 	用`Tsinswreng.CsKeyNode`庫的範式。

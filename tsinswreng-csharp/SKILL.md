@@ -349,6 +349,10 @@ public class Tokenizer{
 - private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
 - `public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。 個人傾向 靈活性優先, 傾向多使用public修飾。 當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
 
+## Json序列化
+
+方便依賴注入時就注入`IJsonSerializer`, 來自`Tsinswreng.CsJson`庫。 不方便依賴注入 想直接用時 就用`AppJson.Inst`。 這兩樣都由項目基礎設施提供, 若缺則應請示用戶。
+
 ## 鍵枚舉
 
 如配置文件的鍵等。 用`Tsinswreng.CsKeyNode`庫的範式。 絕對禁止硬編碼。
