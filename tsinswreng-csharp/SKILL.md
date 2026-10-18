@@ -339,7 +339,7 @@ public class Tokenizer{
 - 除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
   ```cs
   public class SvcUser{
-  	public Task<ResLogout> Logout(IFnCtx Ctx, Ct CT){
+  	public Task<ResLogout> Logout(IFnCtx? Ctx, Ct CT){
   		var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
   		return ...;
   	}
@@ -348,6 +348,10 @@ public class Tokenizer{
   ```
 - private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
 - `public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。 個人傾向 靈活性優先, 傾向多使用public修飾。 當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
+
+## 鍵枚舉
+
+如配置文件的鍵等。 用`Tsinswreng.CsKeyNode`庫的範式。 絕對禁止硬編碼。
 
 ## 其他事項
 

@@ -378,7 +378,7 @@ description: C\#代碼規範
 		- #[除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
 				```cs
 				public class SvcUser{
-					public Task<ResLogout> Logout(IFnCtx Ctx, Ct CT){
+					public Task<ResLogout> Logout(IFnCtx? Ctx, Ct CT){
 						var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
 						return ...;
 					}
@@ -393,6 +393,12 @@ description: C\#代碼規範
 			]
 	]
 
+]
+
+#H[鍵枚舉][
+	如配置文件的鍵等。
+	用`Tsinswreng.CsKeyNode`庫的範式。
+	絕對禁止硬編碼。
 ]
 
 #H[其他事項][
