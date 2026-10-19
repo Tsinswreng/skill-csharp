@@ -357,6 +357,21 @@ public class Tokenizer{
 
 如配置文件的鍵等。 用`Tsinswreng.CsKeyNode`庫的範式。 絕對禁止硬編碼。
 
+## 業務異常
+
+用`Tsinswreng.CsErr`庫, 由項目基礎設施提供, 若缺則應請示用戶。
+
+### 異常枚舉與拋出
+
+- 未規納的臨時異常就用`throw new Exception(Todo.I18n("異常信息"))`;
+- 已規範的異常就用`throw KeysErr.SomeDomain.SomeErrKey.ToErr()`。
+- 禁止硬編碼。這會導致不便于維護
+- 鼓勵多寫`.AddDebugArgs`
+
+### 異常處理
+
+若只是獲取/顯示異常信息而無特殊需要, 應當用項目統一的異常消費入口, 不要每次自己都重複造if else來判斷。
+
 ## 其他事項
 
 - 多打日誌 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`。 `AppLog.Inst`是ILogger的子類, 由項目基礎設施提供, 若缺則應請示用戶
