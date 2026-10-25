@@ -447,6 +447,11 @@ description: C\#代碼規範
 		若缺則應請示用戶
 	]
 	- 少用元組。該自定義類型的就自定義
+	- #[一般業務層的時間戳 用 Unix毫秒時間戳表示即可,
+		使用`Tsinswreng.CsTempus`的`UnixMs`結構體表示毫秒時間戳,
+		`UnixMs`支持與`i64`相互隱式轉換。
+		一般不用標準庫的DateTime等類型。
+	]
 ]
 
 
