@@ -326,6 +326,13 @@ public class Tokenizer{
 - ToolXxx: 工具
 - OptXxx: Options
 - MkrXxx: Xxx Maker (工廠 等)
+- I\_Xxx: 只有一個Xxx成員的接口, 例:
+  ```cs
+  public partial interface I_Id<T>
+  {
+  	public T Id { get; set; }
+  }
+  ```
 
 前綴可組合 如 ISvcXxx: Xxx服務接口
 
