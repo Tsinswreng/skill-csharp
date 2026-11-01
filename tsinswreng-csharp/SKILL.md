@@ -6,124 +6,30 @@ description: C#代碼規範
 
 ---
 
-## 類型別名
+## 通用規範
 
-僅用于有csproj的項目, 不用于腳本項目如csx(dotnet script)
+### 代碼架構規範
 
-```cs
-global using i32 = int;//i: 整數; u: 無符號整數; f: 浮點數; 其他依此類推
-global using str = string;
-global using obj = object;
-global using nil = object; // 專門用來表示null
-global using CT = CancellationToken;
-```
-
-全局變量:`const nil NIL = null`
-
-## 異步函數規範
-
-- 約定 最後一個參數聲明爲`CT Ct`的爲異步函數、不需要加`Async`後綴
-- 異步函數不返回值時、返回值聲明爲`Task<nil>`、不用無泛型的Task
-- 異步函數實現(有方法體的即函數實現)一定要加`async`
-
-正確示例:
-
-```cs
-async Task<nil> WriteToFile(str FilePath, str Content, CT Ct){
-	...
-	return NIL;
-}
-```
-
-## AOT
-
-除非特殊說明、 **!!!所有代碼必須兼容AOT!!!**
-
-- 禁止使用一切不兼容AOT的反射, Emit等
-- 禁止在表達式樹外使用匿名對象
-- 禁止使用dynamic
-
-## 流式懶加載
-
-### 可迭代聚合
-
-如果代碼中有 `IEnumerable<>`或`IAsyncEnumerable<>` 則默認是需要懶加載的。
-
-設計API旹優先接收`IAsyncEnumerable<>`。
-
-對于可迭代聚合、謹慎使用`.ToList()`或類似API 因爲這會把所有元素都載入內存! 也不要自己foreach消費的時候自己開List積攢起來
-
-需要操作內部元素旹盡量使用`.Select`保持懶加載
-
-可迭代集合 只允許消費一遍!! 不允許多次消費！
-
-### 流
-
-流亦同理、 `Stream` 默認需要懶加載、不能把全部數據都一次性載入內存、不能用MemoryStream接收
-
-總結常用對象:
-
-- 流: `Stream`
-- 泛型集合: `IAsyncEnumerable<>`, `IEnumerable<>`
-- 文本讀寫: `TextReader`, `TextWriter`
-
-## 異步優先
-
-設計API旹優先考慮異步版本 尤其是IO操作相關的。 善用`Task<T>`和`IAsyncEnumerable<T>`
-
-## 註釋
-
-- **修改代碼時禁止隨意刪除已有的註釋**
-- 新寫的代碼一定要多加註釋
-- 註釋要避免正確的廢話 不能只是把表面的流程和意思翻譯一遍
-
-類型(interface/class/struct/enum 等等)/函數/成員 及 函數內部的實現(子步驟/關鍵分支) 都要寫註釋!!!
-
-## 聲明與實現分離
-
-當你需要調用已有代碼的API時、大部分情況下你只需要關注函數聲明 不需要關心內部具體實現 **以節約token**。
-
-有兩種情況、一種是基于接口實現; 另一種是基于`partial`關鍵字實現(類似于C語言的頭文件);
-
-### 基于接口
-
-優先閱讀接口中的代碼。通過依賴注入系統使用接口。通常不需要閱讀具體實現。
-
-### 基于partial
-
-約定:
-
-- Xxx.Decl.cs 表示 這個文件是專放聲明的;
-- Xxx.Impl.cs 表示 這個文件是專放實現的;
-
-訪問Xxx中的API時 若有則優先閱讀`*.Decl.cs`！㕥節省token
-
-### 以下情況你需要關注具體實現
-
-- 你正在負責這塊代碼的維護工作、而不是作爲調用API的第三方。
-
-## 代碼架構規範
-
-### 總則
+#### 總則
 
 - **考慮可維護性 可擴展性 可測試性**
 - 一個函數儘量不要超過50行, 若超過則考慮拆分
-- 函數不應接收過多參數, 如果參數過多就應考慮建立專門的DTO作參數或返回值。
+- 函數不應接收過多參數, 若參數過多就應考慮建立專門的DTO作參數或返回值。
 - 使用面向接口的面向對象編程, 用interface來做抽象而不是父類。
 - 僅用類繼承作爲代碼複用的手段, 不依賴類繼承機制來作抽象
 - 遵守SOLID原則, 遵守常見設計模式
   - 該用策略模式就用, 別if-else滿天飛
-- 考慮常見的 可能的未來修改項/未來擴展點/未來需求。當前寫法不能把未來擴展的路堵死
-- 注意代碼複用, 避免重複代碼。發現有能抽取複用邏輯時要抽取複用。
-- 禁止字符串硬編碼鍵名。禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
+- 考慮常見的 可能的未來修改項/未來擴展點/未來需求。 當前寫法不能把未來擴展的路堵死
+- 注意代碼複用, 避免重複代碼。 發現有能抽取複用邏輯時要抽取複用。
+- 禁止字符串硬編碼鍵名。 禁止魔法字符串 魔法數字。 多用 nameof / 枚舉 / 自己實現枚舉
 
-### 可維護性 可擴展性 可測試性
+#### 可維護性 可擴展性 可測試性
 
-#### 減少依賴面, 統一門面
+##### 減少依賴面, 統一門面
 
 要把散亂的、各自的依賴整合成集中的依賴(門面), 然後按門面訪問。 把**同一類依賴**收斂到一個統一、穩定、語義化的入口（門面/抽象）, 調用方只依賴這個入口。 將來換實現時, 只改入口後面, 呼叫方不變。
 
-##### 先看示例
+###### 先看示例
 
 錯誤示例
 
@@ -170,7 +76,7 @@ class Svc{
 
 在此例中, 他們只依賴共同的門面`Log`, 減少了依賴面 將來切換實現時, 只需更改Log中的代碼。
 
-##### 禁止散亂的 魔法字符串/魔法數字 等
+###### 禁止散亂的 魔法字符串/魔法數字 等
 
 常見出錯點:
 
@@ -194,7 +100,7 @@ Button.Content = Todo.I18n("登錄");
 throw new Exception(Todo.I18n("登錄失敗"));
 ```
 
-##### 禁止散亂的 對具體實現的依賴
+###### 禁止散亂的 對具體實現的依賴
 
 見上文Log之例
 
@@ -204,11 +110,11 @@ throw new Exception(Todo.I18n("登錄失敗"));
 - 抽取統一的門面函數(代碼量少, 適合早期快速推進)
 - interface+依賴注入(最佳)
 
-#### 減少不必要的操作系統/平臺依賴
+##### 減少不必要的操作系統/平臺依賴
 
 一個項目通常會劃分出多個程序集。 要確保核心程序集是平臺無關的, 不應依賴特定操作平臺的API, 不應依賴文件系統, 不依賴數據庫
 
-##### 文件操作不依賴文件系統
+###### 文件操作不依賴文件系統
 
 常見做法:用 `IFileSystem` 接口
 
@@ -220,7 +126,7 @@ using System.IO.Abstractions;
 AddSingleton<IFileSystem, FileSystem>();
 ```
 
-##### 用「流」作爲文件的抽象而不使用路徑作爲文件的抽象
+###### 用「流」作爲文件的抽象而不使用路徑作爲文件的抽象
 
 錯誤示例:
 
@@ -235,15 +141,15 @@ await ConvertPdfToPng("myDoc.pdf", "myDoc.png");
 Task<nil> ConvertPdfToPng(Stream Input, Stream Output, CT Ct);
 ```
 
-#### 函數上下文
+##### 函數上下文
 
 建議使用 `IFnCtx? Ctx`作實例方法API的第一個參數, 增強可擴展性。 來自`Tsinswreng.CsCtx`。 靜態方法則不需。
 
-#### 考慮常見的 可能的未來修改項/未來擴展點/未來需求
+##### 考慮常見的 可能的未來修改項/未來擴展點/未來需求
 
 當前寫法不能把未來擴展的路堵死。 當前只實現必要功能, 但不應讓接口形狀、依賴方向、數據流形態等被寫死。
 
-### 基礎API與擴展方法
+#### 基礎API與擴展方法
 
 對于接口/類,等 基礎/底層API應作爲其原始成員。 且設計API時亦應優先考慮基礎API。
 
@@ -291,7 +197,66 @@ public class Tokenizer{
 
 再說一遍, 設計API時亦應優先考慮基礎API。
 
-## 設計哲學: 默認公開可變, 靈活優先
+### 流式懶加載
+
+#### 可迭代聚合
+
+如果代碼中有 `IEnumerable<>`或`IAsyncEnumerable<>` 則默認是需要懶加載的。
+
+設計API旹優先接收`IAsyncEnumerable<>`。
+
+對于可迭代聚合、謹慎使用`.ToList()`或類似API 因爲這會把所有元素都載入內存! 也不要自己foreach消費的時候自己開List積攢起來
+
+需要操作內部元素旹盡量使用`.Select`保持懶加載
+
+可迭代集合 只允許消費一遍!! 不允許多次消費！
+
+#### 流
+
+流亦同理、 `Stream` 默認需要懶加載、不能把全部數據都一次性載入內存、不能用MemoryStream接收
+
+總結常用對象:
+
+- 流: `Stream`
+- 泛型集合: `IAsyncEnumerable<>`, `IEnumerable<>`
+- 文本讀寫: `TextReader`, `TextWriter`
+
+### 異步優先
+
+設計API旹優先考慮異步版本 尤其是IO操作相關的。 善用`Task<T>`和`IAsyncEnumerable<T>`
+
+### 註釋
+
+- **修改代碼時禁止隨意刪除已有的註釋**
+- 新寫的代碼一定要多加註釋
+- 註釋要避免正確的廢話 不能只是把表面的流程和意思翻譯一遍
+
+類型(interface/class/struct/enum 等等)/函數/成員 及 函數內部的實現(子步驟/關鍵分支) 都要寫註釋!!!
+
+### 聲明與實現分離
+
+當你需要調用已有代碼的API時、大部分情況下你只需要關注函數聲明 不需要關心內部具體實現 **以節約token**。
+
+有兩種情況、一種是基于接口實現; 另一種是基于`partial`關鍵字實現(類似于C語言的頭文件);
+
+#### 基于接口
+
+優先閱讀接口中的代碼。通過依賴注入系統使用接口。通常不需要閱讀具體實現。
+
+#### 基于partial
+
+約定:
+
+- Xxx.Decl.cs 表示 這個文件是專放聲明的;
+- Xxx.Impl.cs 表示 這個文件是專放實現的;
+
+訪問Xxx中的API時 若有則優先閱讀`*.Decl.cs`！㕥節省token
+
+#### 以下情況你需要關注具體實現
+
+- 你正在負責這塊代碼的維護工作、而不是作爲調用API的第三方。
+
+### 設計哲學: 默認公開可變, 靈活優先
 
 - 類成員默認公開。 像js 那樣, 語義上是私有的 但實際上是公開的 就在名稱前面加`_` 如`public str _Name;`
 - 接口/類等的 屬性, 默認可讀寫
@@ -301,98 +266,28 @@ public class Tokenizer{
 
 注意上面說的都是「默認」或「首選」設計。 當你確實有必要時 纔可不按默認設計
 
-## 代碼風格
+### 異常
 
-- 左大括號不換行
-- 除`getter/setter`和lambda外、在類型中定義與實現的普通方法 禁止使用`=>`寫法。 即使只有一行代碼也要寫成傳統的大括弧+return的函數體形式。
-- if語句和循環 必須打大括號
-
-### 類型名命名規範
-
-前綴命名:
-
-- IXxx: interface
-- EXxx: enum
-- PoXxx: 實體類, 對應數據庫中的表
-- SvcXxx: Xxx服務類
-- DaoXxx: 數據訪問層
-- CtrlrXxx: WebApi端點(Controller)
-- DtoXxx: 數據傳輸對像
-- ReqXxx: 請求/入參Dto
-- ResXxx: 響應/返回值Dto
-- KeysXxx: 鍵名枚舉(注意禁止到處硬編碼字符串鍵名, 須在統一的類中定義好再引用)
-- ViewXxx: 視圖
-- VmXxx: 視圖模型
-- ToolXxx: 工具
-- OptXxx: Options
-- MkrXxx: Xxx Maker (工廠 等)
-- I\_Xxx: 只有一個Xxx成員的接口, 例:
-  ```cs
-  public partial interface I_Id<T>
-  {
-  	public T Id { get; set; }
-  }
-  ```
-
-前綴可組合 如 ISvcXxx: Xxx服務接口
-
-後綴命名:
-
-- XxxExtn: 放擴展方法的類。 `extension(Xxx z){}`
-- IXxxExtn: `extension(IXxx z){}`
-
-### 變量名命名規範
-
-- 除函數中的局部變量外、所有標識符(包括函數參數)都用大駝峯! 首字母要大寫!
-  ```cs
-  public class SvcUser{
-  	public Task<ResLogout> Logout(IFnCtx? Ctx, Ct CT){
-  		var curTime = new UnixMs(); //僅函數中局部變量用小駝峯
-  		return ...;
-  	}
-  
-  }
-  ```
-- private, protected, internal 變量, 應寫成 `MyPrivateVar`, 不用`_myPrivateVar`。
-- `public SomType _MyVar` 表示該字段爲寬鬆約定的 語義上的 非強制的 私有字段。 個人傾向 靈活性優先, 傾向多使用public修飾。 當一個字段 語義上爲私有但實際爲public時, 用下劃線+大駝峯如`_MyVar`
-
-## Json序列化
-
-方便依賴注入時就注入`IJsonSerializer`, 來自`Tsinswreng.CsJson`庫。 不方便依賴注入 想直接用時 就用`AppJson.Inst`。 這兩樣都由項目基礎設施提供, 若缺則應請示用戶。
-
-## 鍵枚舉
-
-如配置文件的鍵等。 用`Tsinswreng.CsKeyNode`庫的範式。 絕對禁止硬編碼。
-
-## 異常
-
-### 業務異常
+#### 業務異常
 
 用`Tsinswreng.CsErr`庫, 由項目基礎設施提供, 若缺則應請示用戶。
 
-#### 異常枚舉與拋出
+##### 異常枚舉與拋出
 
 - 未規納的臨時異常就用`throw new Exception(Todo.I18n("異常信息"))`;
 - 已規範的異常就用`throw KeysErr.SomeDomain.SomeErrKey.ToErr()`。
 - 禁止硬編碼。這會導致不便于維護
 - 鼓勵多寫`.AddDebugArgs`
 
-#### 異常處理
+##### 異常處理
 
 若只是獲取/顯示異常信息而無特殊需要, 應當用項目統一的異常消費入口, 不要每次自己都重複造if else來判斷。
 
-### 自己寫的庫的異常
+#### 自己寫的庫的異常
 
 凡是供他人調用的東西, 其中的異常文本 若沒做I18n 則一律用英文寫, 不許用中文!
 
-## 其他事項
-
-- 多打日誌 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`。 `AppLog.Inst`是ILogger的子類, 由項目基礎設施提供, 若缺則應請示用戶
-- 少用元組。該自定義類型的就自定義
-- 一般業務層的時間戳 用 Unix毫秒時間戳表示即可, 使用`Tsinswreng.CsTempus`的`UnixMs`結構體表示毫秒時間戳, `UnixMs`支持與`i64`相互隱式轉換。 一般不用標準庫的DateTime等類型。
-- 函數內 不需要對不可空參數(即類型後面沒有打`?`的)做無意義的判空!
-
-## 漸近緟構法
+### 漸近緟構法
 
 緟構\[被依賴得多\]的符號時, 優先做新版本而不是改老版本, 然後再逐步遷移過去。
 
@@ -414,3 +309,12 @@ public FileInfo GetFileInfo(str Path);
 public (str FullPath, i64 CreatedTime, i64 ModifiedTime) GetFileInfo(str Path);
 public FileInfo GetFileInfoV2(str Path);
 ```
+
+### 其他事項
+
+- 多打日誌 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`。 `AppLog.Inst`是ILogger的子類, 由項目基礎設施提供, 若缺則應請示用戶
+- 少用元組。該自定義類型的就自定義
+- 一般業務層的時間戳 用 Unix毫秒時間戳表示即可。 使用`Tsinswreng.CsTempus`的`UnixMs`結構體表示毫秒時間戳, `UnixMs`支持與`i64`相互隱式轉換。 一般不用標準庫的`DateTime`等類型。
+- 函數內 不需要對不可空參數(即類型後面沒有打`?`的)做無意義的判空!
+
+以上內容爲**通用代碼規範**, 雖然其中用C#舉例, 但其思想大多相通。 並非只對C#有效, 須領會其思想。 若你確實在開發C#項目, 則你還應閱讀 [C#項目規範](csharp.typ)

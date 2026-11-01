@@ -99,7 +99,6 @@
 
 	]
 
-
 	#H[Json序列化][
 		方便依賴注入時就注入`IJsonSerializer`,
 		來自`Tsinswreng.CsJson`庫。
@@ -113,14 +112,52 @@
 		用`Tsinswreng.CsKeyNode`庫的範式。
 		絕對禁止硬編碼。
 	]
-
-
-
 ]//~C\#項目規範
 
 
-
-
-
-
-
+#H[其他相關skill][
+	- #[cstreetest:
+			`CsTreeTest`測試庫的用法。
+			寫測試應使用此庫
+		]
+	- #[csharp-doc-attr:
+			`[Doc()]`註釋寫法規範
+		]
+	- #[csctx:
+			`CsCtx`庫`IFnCtx`函數上下文使用說明
+		]
+	- #[csjson:
+			`CsJson`庫使用規範。
+			提供了統一的、基於標準型封裝的Json序列化接口
+			與實現。
+			Json操作應使用此庫。
+		]
+	- #[cskeynode:
+			`CsKeyNode`庫使用規範。
+			定義 異常鍵/I18n鍵/配置鍵 應使用此庫。
+		]
+	- #[cserr:
+			`CsErr`庫使用規範。
+			業務層異常處理應使用此庫
+		]
+	- #[csi18n:
+			`CsI18n`庫使用規範。
+			多語言本地化應使用此庫
+		]
+	- #[cssql:
+			`CsSql`庫使用規範。
+			ORM應使用此庫。
+		]
+	- #[csentity:
+			`CsEntity`庫使用規範。
+			此庫提供了實體類、強類型ULID的框架。
+		]
+	- #[csrefl:
+			`CsRefl`庫使用規範。
+			提供了統一的反射接口
+			以及兩套兼容AOT的實現。
+		]
+	- #[avalonia:
+			Avalonia項目開發規範
+		]
+]
