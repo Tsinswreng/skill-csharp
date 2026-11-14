@@ -45,6 +45,49 @@
 			]
 		- #[if語句和循環 必須打大括號]
 
+		#H[使用更先進 更簡便的語法][
+			#H[字符串避免轉義][
+				多用C\#文本塊語法,
+				不允許手動轉義。
+				錯誤示例:
+				```cs
+				var LoginJson = $"{{\"username\":\"admin\",\"password\":\"{Password}\"}}"; 
+				```
+
+				正確示例
+				````cs
+				var LoginJson = $$"""{"username":"admin","password":"{{Password}}"}""";
+				````
+			]
+			#H[用更簡單的列表字面量語法][
+				錯誤示例:
+				```cs
+				await Exe("git", new List<str>{"commit", "-m", "init"}, Ct);
+				```
+				`new str[]{}`等同樣不要用
+
+				正確示例:
+				````cs
+				await Exe("git", ["commit", "-m", "init"], Ct);
+				````
+			]
+			#H[調用構造函數時能略類名的就省略][
+				能寫`new()`的就不要寫`new 類型名()`,
+				尤其是函數傳參時。
+				錯誤示例:
+				
+				正確示例:
+				````cs
+				await Cp(src, dst, new OptCp(Overwrite: true), Ct);
+				````
+				
+				正確示例:
+				````cs
+				await Cp(src, dst, new(Overwrite: true), Ct);
+				````
+			]
+		]
+
 		#H[類型名命名規範][
 			前綴命名:
 			- IXxx: interface
