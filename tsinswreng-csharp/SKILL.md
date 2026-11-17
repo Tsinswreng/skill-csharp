@@ -318,6 +318,12 @@ public (str FullPath, i64 CreatedTime, i64 ModifiedTime) GetFileInfo(str Path);
 public FileInfo GetFileInfoV2(str Path);
 ```
 
+### 如何排查問題
+
+遇到難以解決的Bug, 必須多打日誌, 然後下一輪再試運行, 複現bug後再收集日誌, 根據日誌來定位bug根因。 **絕對避免黑盒式調試**
+
+若未定位出bug根因時, 則你應當加日誌, 等待下輪複現bug時再收集日誌, 而不是光看着代碼來猜。 避免在不清楚原因的情況下盲目修改代碼 然後頻繁運行測試, 這樣只會浪費時間。
+
 ### 其他事項
 
 - 多打日誌 方便依賴注入時就注入ILogger, 不方便依賴注入時就直接調用全局可用的`AppLog.Inst`。 `AppLog.Inst`是ILogger的子類, 由項目基礎設施提供, 若缺則應請示用戶
